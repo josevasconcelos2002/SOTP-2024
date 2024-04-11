@@ -135,20 +135,15 @@ int mysystem (const char* command) {
 
 int main() {
     char buffer[128];
-    unlink("/tmp/my_pipe");
+
     unlink("/tmp/my_pipe_out");
+    unlink("/tmp/my_pipe");
+    unlink("/tmp/queue_pipe");
 
 
 
-    // Create the pipe
-    if (mkfifo("/tmp/my_pipe", 0666) == -1) {
+    if(mkfifo("/tmp/my_pipe", 0666) == -1){
         perror("mkfifo");
-        return 1;
-    }
-
-    int pipe = open("/tmp/my_pipe", O_RDONLY | O_NONBLOCK);
-    if (pipe == -1) {
-        perror("open");
         return 1;
     }
 
@@ -163,20 +158,50 @@ int main() {
         return 1;
     }
 
+    int queue_pipe;
+    do {
+        queue_pipe = open("/tmp/queue_pipe", O_RDONLY);
+        if (queue_pipe == -1) {
+            sleep(1);  // Sleep for 1 second
+        }
+    } while (queue_pipe == -1);
+
     while (1) {
-        ssize_t num_read = read(pipe, buffer, sizeof(buffer) - 1);
+        ssize_t num_read = read(queue_pipe, buffer, sizeof(buffer) - 1);
         if(num_read > 0) {
             buffer[num_read] = '\0'; // null terminate the string
-            printf("Received: %s\n", buffer);
+            char *pid_str = strtok(buffer," ");
+            int pid2 = atoi(pid_str);
+            char *command = strtok(NULL,"");
+            printf("Received PID: %d\n",pid2);
+            printf("Received: %s\n", command);
 
-            if(strcmp(buffer, "status") == 0){
+
+
+            if(strcmp(command, "status") == 0){
+                char pipe_name[128];
+                snprintf(pipe_name, sizeof(pipe_name), "/tmp/my_pipe_%d", pid2);
+                unlink(pipe_name);
+                if(mkfifo(pipe_name, 0666) == -1){
+                    perror("mkfifo");
+                    return 1;
+                }
+                printf("pipe_name:%s.\n", pipe_name);
+                int pipe_client = open(pipe_name, O_WRONLY);
+                if(pipe_client == -1){
+                    perror("pipe_client error");
+                    return 1;
+                }
+                printf("OLa");
+                printProgramStatusesPipe(pipe_client);
                 
-                printProgramStatusesPipe(pipe_out);
+                //printProgramStatusesPipe(pipe_out);
+                close(pipe_client);
                 continue;
             }
 
             int currentProgramId = programCount;
-            updateProgramStatus(currentProgramId,buffer, "Executing",0);
+            updateProgramStatus(currentProgramId,command, "Executing",0);
 
             struct timespec start, end;
 
@@ -190,7 +215,7 @@ int main() {
 
             if (pid == 0) {
                 // Child process
-                int status = mysystem2(buffer);
+                int status = mysystem2(command);
 
                 if (status == -1) {
                     perror("mysystem");
@@ -206,13 +231,13 @@ int main() {
                 if (WIFEXITED(status)) {
                     printf("Child exited with status %d\n", WEXITSTATUS(status));
                     if(WEXITSTATUS(status) == 0){
-                        updateProgramStatus(currentProgramId,buffer, "Completed", elapsed_time);
+                        updateProgramStatus(currentProgramId,command, "Completed", elapsed_time);
                     }else{
-                        updateProgramStatus(currentProgramId,buffer, "Error", elapsed_time);
+                        updateProgramStatus(currentProgramId,command, "Error", elapsed_time);
                     }
                 } else if (WIFSIGNALED(status)) {
                     printf("Child killed by signal %d\n", WTERMSIG(status));
-                    updateProgramStatus(currentProgramId,buffer, "Error", elapsed_time);
+                    updateProgramStatus(currentProgramId,command, "Error", elapsed_time);
                 }
             }
             programCount++;
@@ -220,8 +245,9 @@ int main() {
         sleep(1); // wait for 1 second
     }
 
-    close(pipe);
+    
     close(pipe_out);
+    close(queue_pipe);
 
     return 0;
 }

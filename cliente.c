@@ -66,7 +66,6 @@ int main(int argc, char *argv[]) {
         sleep(5);
         int pipe_read = open(pipe_name, O_RDONLY);
         if(pipe_read == -1){
-            printf("Pipe_name:%s.\n",pipe_name);
             perror("Error opening pipe");
             return 1;
         }

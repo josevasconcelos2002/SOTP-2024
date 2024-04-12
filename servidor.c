@@ -138,8 +138,6 @@ int main() {
 
     unlink("/tmp/my_pipe_out");
     unlink("/tmp/my_pipe");
-    unlink("/tmp/queue_pipe");
-
 
 
     if(mkfifo("/tmp/my_pipe", 0666) == -1){
@@ -158,16 +156,15 @@ int main() {
         return 1;
     }
 
-    int queue_pipe;
-    do {
-        queue_pipe = open("/tmp/queue_pipe", O_RDONLY);
-        if (queue_pipe == -1) {
-            sleep(1);  // Sleep for 1 second
-        }
-    } while (queue_pipe == -1);
+    int pipe = open("/tmp/my_pipe", O_RDONLY);
+    if (pipe == -1) {
+        perror("open");
+        return 1;
+    }
+
 
     while (1) {
-        ssize_t num_read = read(queue_pipe, buffer, sizeof(buffer) - 1);
+        ssize_t num_read = read(pipe, buffer, sizeof(buffer) - 1);
         if(num_read > 0) {
             buffer[num_read] = '\0'; // null terminate the string
             char *pid_str = strtok(buffer," ");
@@ -247,7 +244,7 @@ int main() {
 
     
     close(pipe_out);
-    close(queue_pipe);
+    close(pipe);
 
     return 0;
 }

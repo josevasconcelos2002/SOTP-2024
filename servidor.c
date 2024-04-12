@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include "queue.h"
 
 
 typedef struct {
@@ -162,6 +163,7 @@ int main() {
         return 1;
     }
 
+    Queue* q = createQueue();
 
     while (1) {
         ssize_t num_read = read(pipe, buffer, sizeof(buffer) - 1);
@@ -173,7 +175,13 @@ int main() {
             printf("Received PID: %d\n",pid2);
             printf("Received: %s\n", command);
 
+            enQueue(q, command, pid2); // Add the command to the queue
+        }
 
+        Node* node = deQueue(q); // Get the next command from the queue
+        if (node != NULL) {
+            char* command = node->command;
+            int pid2 = node->pid;
 
             if(strcmp(command, "status") == 0){
                 char pipe_name[128];
@@ -191,7 +199,7 @@ int main() {
                 }
                 printf("OLa");
                 printProgramStatusesPipe(pipe_client);
-                
+
                 //printProgramStatusesPipe(pipe_out);
                 close(pipe_client);
                 continue;
@@ -238,11 +246,13 @@ int main() {
                 }
             }
             programCount++;
+
+            free(node); // Don't forget to free the node when you're done with it
         }
+
         sleep(1); // wait for 1 second
     }
 
-    
     close(pipe_out);
     close(pipe);
 

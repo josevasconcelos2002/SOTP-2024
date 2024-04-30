@@ -25,31 +25,50 @@ int main(int argc, char *argv[]) {
 
  
     if(strcmp(argv[1],"execute") == 0){
-        if(strcmp(argv[3],"-u") == 0){
-            char pid_command[256];
-            snprintf(pid_command, sizeof(pid_command), "%d", getpid());
+        if(strcmp(argv[1],"execute") == 0){
+            if(strcmp(argv[3],"-u") == 0){
+                char pid_command[256];
+                snprintf(pid_command, sizeof(pid_command), "%d", getpid());
 
+                char buffer[556]; // 256 for pid_command, 300 for command
+                strcpy(buffer, pid_command);
+                strcat(buffer, " ");
+                strcat(buffer,argv[2]); // Copy pid_command to buffer
 
-            write(write_pipe,pid_command,strlen(pid_command));
-            char buffer[1024] = {0}; // Buffer to hold the complete command
-            strcat(buffer, pid_command); // Add the pid_command to the buffer
+                char command[300] = ""; // Initialize command to an empty string
 
-            for (int i = 4; i < argc; i++) {
-                strcat(buffer, " "); // Add a space before each argument
-                strcat(buffer, argv[i]); // Add the argument to the buffer
+                for (int i = 4; i < argc; i++) {
+                    strcat(command, " "); // Add a space before each argument
+                    strcat(command, argv[i]); // Add the argument to the command
+                }
+
+                strcat(buffer, command); // Add command to buffer
+
+                int length = strlen(buffer); // Get the length of the message
+                write(write_pipe, &length, sizeof(length)); // Write the length to the pipe
+                write(write_pipe, buffer, length); // Write buffer to pipe
             }
-
-            write(write_pipe, buffer, strlen(buffer));
         }
         if(strcmp(argv[3],"-p") == 0){
-        char *token = strtok(argv[4], "|");
-        while(token != NULL){
-            char command[256];
-            snprintf(command, sizeof(command), "%s|", token);
-            write(write_pipe, command, strlen(command));
-            token = strtok(NULL,"|");
+                char pid_command[256];
+                snprintf(pid_command, sizeof(pid_command), "%d", getpid());
+
+                char buffer[556]; // 256 for pid_command, 300 for command
+                strcpy(buffer, pid_command); // Copy pid_command to buffer
+
+                char command[300] = ""; // Initialize command to an empty string
+
+                for (int i = 4; i < argc; i++) {
+                    strcat(command, " "); // Add a space before each argument
+                    strcat(command, argv[i]); // Add the argument to the command
+                }
+
+                strcat(buffer, command); // Add command to buffer
+
+                int length = strlen(buffer); // Get the length of the message
+                write(write_pipe, &length, sizeof(length)); // Write the length to the pipe
+                write(write_pipe, buffer, length); // Write buffer to pipe
             }
-        }
     }
 
     if (strcmp(argv[1], "status") == 0) {
@@ -60,8 +79,15 @@ int main(int argc, char *argv[]) {
         char pid2[258];
         snprintf(pipe_name, sizeof(pipe_name), "/tmp/my_pipe_%d", pid);
         snprintf(pid2, sizeof(pid2),"%d ", pid);
-        write(write_pipe, pid2, strlen(pid2));
-        write(write_pipe, argv[1], strlen(argv[1]));
+
+        char buffer[300]; // Buffer to hold the combined message
+        strcpy(buffer, pid2); // Copy pid2 to buffer
+        strcat(buffer, argv[1]); // Append argv[1] to buffer
+
+        int length = strlen(buffer); // Get the length of the message
+        write(write_pipe, &length, sizeof(length)); // Write the length to the pipe
+        write(write_pipe, buffer, length); // Write the message to the pipe
+
         printf("Pipe_name :%s\n", pipe_name);
         sleep(5);
         int pipe_read = open(pipe_name, O_RDONLY);
@@ -69,23 +95,28 @@ int main(int argc, char *argv[]) {
             perror("Error opening pipe");
             return 1;
         }
-        char buffer[256];
-        while (1) {
-            ssize_t count = read(pipe_read, buffer, sizeof(buffer)-1);
-            if (count > 0) {
-                buffer[count] = '\0';
-                printf("%s", buffer);
-                break;
-            } else if (count == 0) {
-                break;
-       while(pipe_read == -1){
-            sleep(1);
-        }     } else {
-                perror("read");
-                return 1;
+        if (pipe_read != -1) {
+            char buffer2[256];
+            while (1) {
+                ssize_t count = read(pipe_read, buffer2, sizeof(buffer2)-1);
+                if (count > 0) {
+                    buffer2[count] = '\0';
+                    printf("%s", buffer2);
+                    break;
+                } else if (count == 0) {
+                    printf("No Status, Womp Womp");
+                    break;
+                } else {
+                    perror("read");
+                    return 1;
+                }
+            }
+            close(pipe_read);
+        } else {
+            while(pipe_read == -1){
+                sleep(1);
             }
         }
-        close(pipe_read);
     }
 
     close(write_pipe);

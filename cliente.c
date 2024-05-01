@@ -43,44 +43,44 @@ int main(int argc, char *argv[]) {
                     strcat(command, argv[i]); // Add the argument to the command
                 }
 
-                strcat(buffer, command); // Add command to buffer
+                strcat(buffer, command); 
 
-                int length = strlen(buffer); // Get the length of the message
-                write(write_pipe, &length, sizeof(length)); // Write the length to the pipe
+                int length = strlen(buffer);
+                write(write_pipe, &length, sizeof(length));
                 write(write_pipe, buffer, length); 
-                printf("Task 1 Received");
+                printf("1 Task Received\n");
             }
         }
         if(strcmp(argv[3],"-p") == 0){
                 char pid_command[256];
                 snprintf(pid_command, sizeof(pid_command), "%d", getpid());
 
-                char buffer[556]; // 256 for pid_command, 300 for command
+                char buffer[556]; 
                 strcpy(buffer, pid_command);
                 strcat(buffer, " ");
-                strcat(buffer,argv[2]); // Copy pid_command to buffer
+                strcat(buffer,argv[2]); 
 
-                char command[300] = ""; // Initialize command to an empty string
+                char command[300] = "";
 
                 for (int i = 4; i < argc; i++) {
-                    strcat(command, " "); // Add a space before each argument
-                    strcat(command, argv[i]); // Add the argument to the command
+                    strcat(command, " "); 
+                    strcat(command, argv[i]);
                 }
 
-                strcat(buffer, command); // Add command to buffer
+                strcat(buffer, command); 
 
-                int length = strlen(buffer); // Get the length of the message
-                write(write_pipe, &length, sizeof(length)); // Write the length to the pipe
-                write(write_pipe, buffer, length); // Write buffer to pipe
+                int length = strlen(buffer); 
+                write(write_pipe, &length, sizeof(length)); 
+                write(write_pipe, buffer, length); 
 
-                char* command_copy = strdup(command); // Create a copy of command to avoid modifying the original string
-                char* token = strtok(command_copy, "|"); // Split the command string into tokens separated by "|"
+                char* command_copy = strdup(command); 
+                char* token = strtok(command_copy, "|");
                 int command_count = 0;
                 while (token != NULL) {
                     command_count++;
                     token = strtok(NULL, "|");
                 }
-                printf("Commands sent: %d\n", command_count); // Print the number of commands sent
+                printf("%d Tasks Received\n", command_count); // Print the number of commands sent
 
                 free(command_copy);
             }

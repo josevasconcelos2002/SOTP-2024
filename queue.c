@@ -8,6 +8,7 @@
 typedef struct Node {
     char* command;
     int pid;
+    int time;
     struct Node* next;
 } Node;
 
@@ -15,10 +16,11 @@ typedef struct Queue {
     Node *front, *rear;
 } Queue;
 
-Node* newNode(char* command, int pid) {
+Node* newNode(char* command, int pid, int time) {
     Node* temp = (Node*)malloc(sizeof(Node));
     temp->command = command;
     temp->pid = pid;
+    temp->time = time;
     temp->next = NULL;
     return temp;
 }
@@ -29,14 +31,31 @@ Queue* createQueue() {
     return q;
 }
 
-void enQueue(Queue* q, char* command, int pid) {
-    Node* temp = newNode(command, pid);
+void enQueue(Queue* q, char* command, int pid, int time) {  // Changed time to int
+    Node* temp = newNode(command, pid, time);
     if (q->rear == NULL) {
         q->front = q->rear = temp;
         return;
     }
-    q->rear->next = temp;
-    q->rear = temp;
+
+    // If the new node's time is less than the front node's time, insert at the front
+    if (temp->time < q->front->time) {  // Compare integers
+        temp->next = q->front;
+        q->front = temp;
+    } else {
+        // Else traverse the queue to find the correct position
+        Node* current = q->front;
+        while (current->next != NULL && current->next->time < temp->time) {  // Compare integers
+            current = current->next;
+        }
+        // Insert after the node that has a lesser time
+        temp->next = current->next;
+        current->next = temp;
+        // If it was the last node, update rear
+        if (current == q->rear) {
+            q->rear = temp;
+        }
+    }
 }
 
 Node* deQueue(Queue* q) {

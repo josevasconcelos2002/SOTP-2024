@@ -138,6 +138,7 @@ int main() {
     }
 
     Queue* q = createQueue();
+    int running_processes = 0;
 
     while (1) {
         int length; 
@@ -156,10 +157,10 @@ int main() {
                     printf("Received PID: %s\n", pid_command);
                     int pid_command2 = atoi(pid_command);
                     printf("Received Time: %s\n", time);
-                    long time2 = atol(time);
+                    int time2 = atol(time);
                     printf("Received Command: %s\n", command);
 
-                    enQueue(q, command, pid_command2); 
+                    enQueue(q, command, pid_command2,time2); 
                 }
             }
         }
@@ -168,7 +169,7 @@ int main() {
         Node* node = deQueue(q); // Get the next command from the queue
         
         
-        if (node != NULL) {
+        if (running_processes < 4 && node != NULL) {
             pid_t pid = fork();
             int currentProgramId = programCount;
             programCount++;
@@ -240,6 +241,15 @@ int main() {
 
             }
         }
+        while (running_processes > 0) {
+        int status;
+        pid_t pid = waitpid(-1, &status, WNOHANG);
+        if (pid > 0) {
+            running_processes--;
+        } else {
+            break;
+        }
+    }
 
     }
     

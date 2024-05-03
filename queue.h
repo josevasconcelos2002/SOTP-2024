@@ -16,5 +16,7 @@ Node* newNode(char* command, int pid, int time);
 Queue* createQueue();
 void enQueue(Queue* q, char* command, int pid, int time);
 Node* deQueue(Queue* q);
+Node* findNodeByPid(Queue* q, int pid);
+char** getCommandsInQueue(Queue* q);
 
 #endif

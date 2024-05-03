@@ -138,6 +138,90 @@ void read_status_and_print_tasks(int pipe)
     }
 }
 
+void read_status_and_print_tasks(int pipe, Queue *q)
+{
+    DIR *dir = opendir("Status");
+    if (dir == NULL)
+    {
+        perror("Error opening directory");
+        return;
+    }
+
+    struct dirent *entry;
+    while ((entry = readdir(dir)) != NULL)
+    {
+        if (entry->d_type == DT_REG)
+        { // If the entry is a regular file
+            char filename[256];
+            snprintf(filename, sizeof(filename), "Status/%s", entry->d_name);
+
+            int fd = open(filename, O_RDONLY);
+            if (fd == -1)
+            {
+                perror("Error opening file");
+                continue;
+            }
+
+            char buffer[4096];
+            ssize_t bytes_read;
+            while ((bytes_read = read(fd, buffer, sizeof(buffer) - 1)) > 0)
+            {
+                buffer[bytes_read] = '\0'; // Null-terminate the string
+                ssize_t bytes_written = write(pipe, buffer, bytes_read);
+                if (bytes_written < 0)
+                {
+                    perror("Error writing to pipe");
+                    close(fd);
+                    closedir(dir);
+                    return;
+                }
+            }
+
+            if (bytes_read == -1)
+            {
+                perror("Error reading file");
+            }
+
+            close(fd);
+        }
+    }
+
+    closedir(dir);
+
+    char *queueInfo = getQueueInfo(q);
+    ssize_t bytes_written = write(pipe, queueInfo, strlen(queueInfo));
+    if (bytes_written < 0)
+    {
+        perror("Error writing to pipe");
+        free(queueInfo);
+        return;
+    }
+    if (bytes_written < strlen(queueInfo))
+    {
+        fprintf(stderr, "Warning: Not all data was written to pipe\n");
+    }
+
+    free(queueInfo); // Don't forget to free the memory when you're done with it
+
+    char buffer[256];
+    for (int i = 0; i < num_tasks; i++)
+    {
+        Task *task = &tasks[i];
+        snprintf(buffer, sizeof(buffer), "Program ID: %d\nCommand: %s\nStatus: Executing\n\n",
+                 task->id, task->command);
+        bytes_written = write(pipe, buffer, strlen(buffer));
+        if (bytes_written < 0)
+        {
+            perror("Error writing to pipe");
+            return;
+        }
+        if (bytes_written < strlen(buffer))
+        {
+            fprintf(stderr, "Warning: Not all data was written to pipe\n");
+        }
+    }
+}
+
 void read_status_directory2(int pipe)
 {
     DIR *dir = opendir("Status");

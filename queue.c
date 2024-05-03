@@ -68,3 +68,34 @@ Node* deQueue(Queue* q) {
         q->rear = NULL;
     return temp;
 }
+
+Node* findNodeByPid(Queue* q, int pid) {
+    Node* current = q->front;
+    while (current != NULL) {
+        if (current->pid == pid) {
+            return current;
+        }
+        current = current->next;
+    }
+    return NULL;
+}
+
+char** getCommandsInQueue(Queue* q) {
+    int count = 0;
+    Node* current = q->front;
+    while (current != NULL) {
+        count++;
+        current = current->next;
+    }
+    char** commands = (char**)malloc((count + 1) * sizeof(char*));
+
+    current = q->front;
+    for (int i = 0; i < count; i++) {
+        commands[i] = current->command;
+        current = current->next;
+    }
+
+    commands[count] = NULL;
+
+    return commands;
+}

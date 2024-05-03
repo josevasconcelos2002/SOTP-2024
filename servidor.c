@@ -41,19 +41,19 @@ void updateProgramStatus(int id, const char *command, const char *status, long t
 
     ProgramStatus *ps = &programStatuses[id];
     ps->id = id + 1;
-    strncpy(ps->command, command, sizeof(ps->command) - 1); // Ensure null-termination
+    strncpy(ps->command, command, sizeof(ps->command) - 1); 
     ps->command[sizeof(ps->command) - 1] = '\0';
     strcpy(ps->status, status);
     ps->time = time;
 
-    printf("\n"); // Print a newline for readability
+    printf("\n");
 }
 void writeProgramStatusToFile(int id, char *command, char *status, long time)
 {
     char filename[128];
     snprintf(filename, sizeof(filename), "Status/program_status_%d.txt", id);
 
-    int fd = open(filename, O_WRONLY | O_CREAT | O_APPEND, 0644); // Open the file in append mode
+    int fd = open(filename, O_WRONLY | O_CREAT | O_APPEND, 0644); 
     if (fd == -1)
     {
         perror("Error opening file for writing");
@@ -64,7 +64,7 @@ void writeProgramStatusToFile(int id, char *command, char *status, long time)
     dprintf(fd, "Command: %s\n", command);
     dprintf(fd, "Status: %s\n", status);
     dprintf(fd, "Time: %ldms\n", time);
-    dprintf(fd, "\n"); // Print a newline for readability
+    dprintf(fd, "\n"); 
 
     close(fd);
 }
@@ -82,7 +82,7 @@ void read_status_and_print_tasks(int pipe)
     while ((entry = readdir(dir)) != NULL)
     {
         if (entry->d_type == DT_REG)
-        { // If the entry is a regular file
+        { 
             char filename[256];
             snprintf(filename, sizeof(filename), "Status/%s", entry->d_name);
 
@@ -138,89 +138,6 @@ void read_status_and_print_tasks(int pipe)
     }
 }
 
-void read_status_and_print_tasks(int pipe, Queue *q)
-{
-    DIR *dir = opendir("Status");
-    if (dir == NULL)
-    {
-        perror("Error opening directory");
-        return;
-    }
-
-    struct dirent *entry;
-    while ((entry = readdir(dir)) != NULL)
-    {
-        if (entry->d_type == DT_REG)
-        { // If the entry is a regular file
-            char filename[256];
-            snprintf(filename, sizeof(filename), "Status/%s", entry->d_name);
-
-            int fd = open(filename, O_RDONLY);
-            if (fd == -1)
-            {
-                perror("Error opening file");
-                continue;
-            }
-
-            char buffer[4096];
-            ssize_t bytes_read;
-            while ((bytes_read = read(fd, buffer, sizeof(buffer) - 1)) > 0)
-            {
-                buffer[bytes_read] = '\0'; // Null-terminate the string
-                ssize_t bytes_written = write(pipe, buffer, bytes_read);
-                if (bytes_written < 0)
-                {
-                    perror("Error writing to pipe");
-                    close(fd);
-                    closedir(dir);
-                    return;
-                }
-            }
-
-            if (bytes_read == -1)
-            {
-                perror("Error reading file");
-            }
-
-            close(fd);
-        }
-    }
-
-    closedir(dir);
-
-    char *queueInfo = getQueueInfo(q);
-    ssize_t bytes_written = write(pipe, queueInfo, strlen(queueInfo));
-    if (bytes_written < 0)
-    {
-        perror("Error writing to pipe");
-        free(queueInfo);
-        return;
-    }
-    if (bytes_written < strlen(queueInfo))
-    {
-        fprintf(stderr, "Warning: Not all data was written to pipe\n");
-    }
-
-    free(queueInfo); // Don't forget to free the memory when you're done with it
-
-    char buffer[256];
-    for (int i = 0; i < num_tasks; i++)
-    {
-        Task *task = &tasks[i];
-        snprintf(buffer, sizeof(buffer), "Program ID: %d\nCommand: %s\nStatus: Executing\n\n",
-                 task->id, task->command);
-        bytes_written = write(pipe, buffer, strlen(buffer));
-        if (bytes_written < 0)
-        {
-            perror("Error writing to pipe");
-            return;
-        }
-        if (bytes_written < strlen(buffer))
-        {
-            fprintf(stderr, "Warning: Not all data was written to pipe\n");
-        }
-    }
-}
 
 void read_status_directory2(int pipe)
 {
@@ -235,7 +152,7 @@ void read_status_directory2(int pipe)
     while ((entry = readdir(dir)) != NULL)
     {
         if (entry->d_type == DT_REG)
-        { // If the entry is a regular file
+        { 
             char filename[256];
             snprintf(filename, sizeof(filename), "Status/%s", entry->d_name);
 
@@ -250,7 +167,7 @@ void read_status_directory2(int pipe)
             ssize_t bytes_read;
             while ((bytes_read = read(fd, buffer, sizeof(buffer) - 1)) > 0)
             {
-                buffer[bytes_read] = '\0'; // Null-terminate the string
+                buffer[bytes_read] = '\0'; 
                 ssize_t bytes_written = write(pipe, buffer, bytes_read);
                 if (bytes_written < 0)
                 {
@@ -295,10 +212,9 @@ void print_tasks_pipe(int pipe)
 }
 void add_task(int id, char *command, pid_t pid)
 {
-    // Wait until there's an open slot
     while (num_tasks >= MAX_TASKS)
     {
-        sleep(1); // Sleep for 1 second
+        sleep(1); 
     }
 
     Task new_task;
@@ -318,7 +234,6 @@ void remove_task(int id)
     {
         if (tasks[i].id == id)
         {
-            // Shift all tasks after this one to the left
             for (int j = i; j < num_tasks - 1; j++)
             {
                 tasks[j] = tasks[j + 1];
@@ -333,7 +248,7 @@ int mysystem2(const char *command, int id)
 {
     char command_copy[128];
     strncpy(command_copy, command, sizeof(command_copy));
-    command_copy[sizeof(command_copy) - 1] = '\0'; // Ensure null-termination
+    command_copy[sizeof(command_copy) - 1] = '\0';
 
     char *token = strtok(command_copy, "|");
     while (token != NULL)
@@ -345,10 +260,9 @@ int mysystem2(const char *command, int id)
             char *argm[128];
             int i = 0;
 
-            // Copy the command to a non-const string
             char command_copy2[128];
             strncpy(command_copy2, token, sizeof(command_copy2));
-            command_copy2[sizeof(command_copy2) - 1] = '\0'; // Ensure null-termination
+            command_copy2[sizeof(command_copy2) - 1] = '\0'; 
 
             char *token2 = strtok(command_copy2, " ");
             while (token2 != NULL)
@@ -359,11 +273,9 @@ int mysystem2(const char *command, int id)
             }
             argm[i] = NULL;
 
-            // Create a filename based on the id
             char filename[128];
             snprintf(filename, sizeof(filename), "Resultados/output_%d.txt", id);
 
-            // Open the file in append mode
             int fd = open(filename, O_WRONLY | O_CREAT | O_APPEND, S_IRUSR | S_IWUSR);
             if (fd == -1)
             {
@@ -378,10 +290,9 @@ int mysystem2(const char *command, int id)
                 _exit(EXIT_FAILURE);
             }
 
-            // Close the original file descriptor
             close(fd);
 
-            execvp(argm[0], argm); // Pass argm[0] instead of command
+            execvp(argm[0], argm); 
             _exit(EXIT_FAILURE);
         }
         else if (pid < 0)
@@ -522,8 +433,6 @@ int main()
                         perror("pipe_client error");
                         return 1;
                     }
-                    // printProgramStatusesPipe(pipe_client);
-                    // print_tasks_pipe2(pipe_client);
                     read_status_and_print_tasks(pipe_client);
 
                     close(pipe_client);
@@ -533,10 +442,8 @@ int main()
                 struct timespec start, end;
                 clock_gettime(CLOCK_MONOTONIC, &start);
 
-                // writeProgramStatusToFile(currentProgramId, command, "Executing", 0);
 
                 int status = mysystem2(command, currentProgramId);
-                // printProgramStatuses();
                 if (status == -1)
                 {
                     perror("mysystem");

@@ -1,12 +1,12 @@
-all: servidor cliente
+all: orchestrator client
 
-servidor: servidor.c queue.c
-	gcc servidor.c queue.c -o servidor
+orchestrator: orchestrator.c queue.c
+	gcc orchestrator.c queue.c -o orchestrator
 
-cliente: cliente.c
-	gcc cliente.c -o cliente
+client: client.c
+	gcc client.c -o client
 
 clean:
-	rm -f servidor cliente
+	rm -f orchestrator client
 	rm -rf Resultados
 	rm -rf Status

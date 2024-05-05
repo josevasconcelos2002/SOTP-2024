@@ -1,0 +1,5 @@
+Program ID: 2
+Command: ls -la | pwd | man ascii
+Status: Completed
+Time: 42ms
+

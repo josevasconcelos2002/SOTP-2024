@@ -1,5 +1,0 @@
-Program ID: 1
-Command: ls
-Status: Completed
-Time: 1ms
-

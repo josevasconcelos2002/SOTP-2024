@@ -36,7 +36,7 @@ Queue *createQueue()
 }
 
 void enQueue(Queue *q, char *command, int pid, int time)
-{ // Changed time to int
+{ 
     Node *temp = newNode(command, pid, time);
     if (q->rear == NULL)
     {
@@ -44,24 +44,24 @@ void enQueue(Queue *q, char *command, int pid, int time)
         return;
     }
 
-    // If the new node's time is less than the front node's time, insert at the front
+    
     if (temp->time < q->front->time)
-    { // Compare integers
+    {
         temp->next = q->front;
         q->front = temp;
     }
     else
     {
-        // Else traverse the queue to find the correct position
+       
         Node *current = q->front;
         while (current->next != NULL && current->next->time < temp->time)
-        { // Compare integers
+        { 
             current = current->next;
         }
-        // Insert after the node that has a lesser time
+       
         temp->next = current->next;
         current->next = temp;
-        // If it was the last node, update rear
+        
         if (current == q->rear)
         {
             q->rear = temp;

@@ -7,7 +7,7 @@ if [ -f "Makefile" ]; then
     sleep 2
     # Limpa a tela
     clear
-    gnome-terminal -- "./orchestrator"
+    gnome-terminal -- "./orchestrator" FCFS
     ./client execute 200 -u "ls -l"
     echo "Execução da tarefa 1 : ls -l"
     sleep 2

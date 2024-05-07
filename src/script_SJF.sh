@@ -17,16 +17,16 @@ if [ -f "Makefile" ]; then
     runtime=$(( (end-start)/1000000 ))
     echo -e "\n----------\e[32mTeste SJF\e[0m----------\n"
     echo -e "\e[32m\nExecução da tarefa 1\e[0m : ls -l\n"
-    cat "Resultados/output_1.txt"
+    # cat "Resultados/output_1.txt"
     sleep 1
     echo -e "\e[32m\nExecução da tarefa 2\e[0m : ls\n"
-    cat "Resultados/output_2.txt"
+    # cat "Resultados/output_2.txt"
     sleep 1
     echo -e "\e[32m\nExecução da tarefa 3\e[0m : man ascii\n"
-    cat "Resultados/output_3.txt"
+    # cat "Resultados/output_3.txt"
     sleep 1
     echo -e "\e[32m\nExecução da tarefa 4\e[0m : man strcmp\n"
-    cat "Resultados/output_4.txt"
+    # cat "Resultados/output_4.txt"
 
     echo -e "\e[32m\nTempo de execução\e[0m: $runtime milissegundos\n"
     echo -e "\n------------------------------\n"

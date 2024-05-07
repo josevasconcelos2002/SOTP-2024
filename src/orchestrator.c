@@ -327,7 +327,7 @@ int main(int argc, char *argv[])
 
     if (argc == 2)
     {
-        if (strcasecmp(argv[1], "SJF") == 0)
+        if (strcasecmp(argv[1], "FCFS") == 0)
         {
             char buffer[4000];
 
@@ -499,7 +499,7 @@ int main(int argc, char *argv[])
 
             return 0;
         }
-        if (strcasecmp(argv[1], "FCFS") == 0)
+        if (strcasecmp(argv[1], "SJF") == 0)
         {
             char buffer[4000];
 

@@ -12,6 +12,7 @@ if [ -f "Makefile" ]; then
     ./client execute 40 -u "ls -l"
     ./client execute 30 -u "ls"
     ./client execute 100 -u "man ascii"
+    ./client execute 80 -u "man strcmp"
     end=$(date +%s%N)
     runtime=$(( (end-start)/1000000 ))
     echo -e "\n----------\e[32mTeste SJF\e[0m----------\n"
@@ -23,6 +24,9 @@ if [ -f "Makefile" ]; then
     sleep 1
     echo -e "\e[32m\nExecução da tarefa 3\e[0m : man ascii\n"
     cat "Resultados/output_3.txt"
+    sleep 1
+    echo -e "\e[32m\nExecução da tarefa 4\e[0m : man strcmp\n"
+    cat "Resultados/output_4.txt"
 
     echo -e "\e[32m\nTempo de execução\e[0m: $runtime milissegundos\n"
     echo -e "\n------------------------------\n"
